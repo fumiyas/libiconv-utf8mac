@@ -80,7 +80,12 @@ done
 
 # ========== Generate files. ==========
 
-make -f Makefile.devel totally-clean all || exit $?
+make -f Makefile.devel totally-clean all \
+    ${AUTOCONF:+AUTOCONF="$AUTOCONF"} \
+    ${AUTOHEADER:+AUTOHEADER="$AUTOHEADER"} \
+    ${AUTOMAKE:+AUTOMAKE="$AUTOMAKE"} \
+    ${ACLOCAL:+ACLOCAL="$ACLOCAL"} \
+    || exit $?
 
 (cd libcharset
  ./autogen.sh || exit $?
