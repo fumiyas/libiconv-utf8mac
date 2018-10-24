@@ -22,4 +22,8 @@
 # Prerequisite: ./autopull.sh
 # Usage:        ./autogen.sh
 
-make -f Makefile.devel totally-clean all
+make -f Makefile.devel totally-clean all \
+    ${AUTOCONF:+AUTOCONF="$AUTOCONF"} \
+    ${AUTOHEADER:+AUTOHEADER="$AUTOHEADER"} \
+    ${AUTOMAKE:+AUTOMAKE="$AUTOMAKE"} \
+    ${ACLOCAL:+ACLOCAL="$ACLOCAL"}
