@@ -159,6 +159,7 @@ SOURCE_FILES = \
     converters.h \
       ascii.h \
       utf8.h \
+      utf8mac.h \
       ucs2.h \
       ucs2be.h \
       ucs2le.h \
