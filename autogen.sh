@@ -62,7 +62,12 @@ if test $skip_gnulib = false; then
        GNULIB_TOOL="$GNULIB_TOOL"
 fi
 
-make -f Makefile.devel totally-clean all || exit $?
+make -f Makefile.devel totally-clean all \
+    ${AUTOCONF:+AUTOCONF="$AUTOCONF"} \
+    ${AUTOHEADER:+AUTOHEADER="$AUTOHEADER"} \
+    ${AUTOMAKE:+AUTOMAKE="$AUTOMAKE"} \
+    ${ACLOCAL:+ACLOCAL="$ACLOCAL"} \
+    || exit $?
 
 # Copy files into the libcharset subpackage, so that libcharset/autogen.sh
 # does not need to invoke gnulib-tool nor automake.
