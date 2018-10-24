@@ -68,6 +68,12 @@ DEFALIAS(     "UTF8",                   /* HP-UX */
             utf8)
 #endif
 
+DEFENCODING(( "UTF-8-MAC",              /* utf8-nfd */
+            "UTF8-MAC",                 /* label from samba 2.2jp */
+            ),
+            utf8mac,
+            { utf8mac_mbtowc, NULL },     { utf8mac_wctomb, NULL })
+
 DEFENCODING(( "UCS-2",                  /* glibc */
               "ISO-10646-UCS-2",        /* IANA */
               "csUnicode",              /* IANA */
