@@ -47,6 +47,7 @@ all : srclib/Makefile.gnulib srclib/Makefile.in \
 
 GNULIB_MODULES = \
   binary-io \
+  canonicalize-lgpl \
   error \
   gettext \
   gettext-h \
