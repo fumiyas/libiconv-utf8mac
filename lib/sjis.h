@@ -63,16 +63,6 @@ sjis_mbtowc (conv_t conv, ucs4_t *pwc, const unsigned char *s, size_t n)
         buf[1] = (t2 < 0x5e ? t2 : t2-0x5e) + 0x21;
         return jisx0208_mbtowc(conv,pwc,buf,2);
       }
-    } else if (s1 >= 0xf0 && s1 <= 0xf9) {
-      /* User-defined range. See
-       * Ken Lunde's "CJKV Information Processing", table 4-66, p. 206. */
-      if (n < 2)
-        return RET_TOOFEW(0);
-      s2 = s[1];
-      if ((s2 >= 0x40 && s2 <= 0x7e) || (s2 >= 0x80 && s2 <= 0xfc)) {
-        *pwc = 0xe000 + 188*(s1 - 0xf0) + (s2 < 0x80 ? s2-0x40 : s2-0x41);
-        return 2;
-      }
     }
     return RET_ILSEQ;
   }
@@ -112,19 +102,6 @@ sjis_wctomb (conv_t conv, unsigned char *r, ucs4_t wc, size_t n)
       r[1] = (t2 < 0x3f ? t2+0x40 : t2+0x41);
       return 2;
     }
-  }
-
-  /* User-defined range. See
-   * Ken Lunde's "CJKV Information Processing", table 4-66, p. 206. */
-  if (wc >= 0xe000 && wc < 0xe758) {
-    unsigned char c1, c2;
-    if (n < 2)
-      return RET_TOOSMALL;
-    c1 = (unsigned int) (wc - 0xe000) / 188;
-    c2 = (unsigned int) (wc - 0xe000) % 188;
-    r[0] = c1+0xf0;
-    r[1] = (c2 < 0x3f ? c2+0x40 : c2+0x41);
-    return 2;
   }
 
   return RET_ILUNI;

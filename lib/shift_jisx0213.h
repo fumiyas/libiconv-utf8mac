@@ -49,14 +49,9 @@ shift_jisx0213_mbtowc (conv_t conv, ucs4_t *pwc, const unsigned char *s, size_t 
     return 0; /* Don't advance the input pointer. */
   } else {
     unsigned char c = *s;
+    /* Plain ISO646-JP character. */
     if (c < 0x80) {
-      /* Plain ISO646-JP character. */
-      if (c == 0x5c)
-        *pwc = (ucs4_t) 0x00a5;
-      else if (c == 0x7e)
-        *pwc = (ucs4_t) 0x203e;
-      else
-        *pwc = (ucs4_t) c;
+      *pwc = (ucs4_t) c;
       return 1;
     } else if (c >= 0xa1 && c <= 0xdf) {
       *pwc = c + 0xfec0;
@@ -212,24 +207,10 @@ shift_jisx0213_wctomb (conv_t conv, unsigned char *r, ucs4_t wc, size_t n)
     count = 2;
   }
 
-  if (wc < 0x80 && wc != 0x5c && wc != 0x7e) {
+  if (wc < 0x80) {
     /* Plain ISO646-JP character. */
     if (n > count) {
       r[0] = (unsigned char) wc;
-      conv->ostate = 0;
-      return count+1;
-    } else
-      return RET_TOOSMALL;
-  } else if (wc == 0x00a5) {
-    if (n > count) {
-      r[0] = 0x5c;
-      conv->ostate = 0;
-      return count+1;
-    } else
-      return RET_TOOSMALL;
-  } else if (wc == 0x203e) {
-    if (n > count) {
-      r[0] = 0x7e;
       conv->ostate = 0;
       return count+1;
     } else

@@ -40,11 +40,8 @@
  *    0x8192  0x00A3 # POUND SIGN            0xFFE1 # FULLWIDTH POUND SIGN
  *    0x81CA  0x00AC # NOT SIGN              0xFFE2 # FULLWIDTH NOT SIGN
  *
- *    We don't implement the latter 6 of these changes, only the first one.
- *    SHIFTJIS.TXT makes more sense. However, as a compromise with user
- *    expectation, we implement the middle 5 of these changes in the
- *    Unicode to CP932 direction. We don't implement the last one at all,
- *    because it would collide with the mapping of 0xFA54.
+ *    We implement these changes. See Windows-31J.xml at the japanese XML
+ *    profile [http://www.w3.org/TR/japanese-xml/].
  *
  * 3. A few new rows. See cp932ext.h.
  *
@@ -95,7 +92,7 @@ cp932_mbtowc (conv_t conv, ucs4_t *pwc, const unsigned char *s, size_t n)
   else {
     unsigned char s1, s2;
     s1 = c;
-    if ((s1 >= 0x81 && s1 <= 0x9f && s1 != 0x87) || (s1 >= 0xe0 && s1 <= 0xea)) {
+    if ((s1 >= 0x82 && s1 <= 0x9f && s1 != 0x87) || (s1 >= 0xe0 && s1 <= 0xea)) {
       if (n < 2)
         return RET_TOOFEW(0);
       s2 = s[1];
@@ -107,7 +104,7 @@ cp932_mbtowc (conv_t conv, ucs4_t *pwc, const unsigned char *s, size_t n)
         buf[1] = (t2 < 0x5e ? t2 : t2-0x5e) + 0x21;
         return jisx0208_mbtowc(conv,pwc,buf,2);
       }
-    } else if ((s1 == 0x87) || (s1 >= 0xed && s1 <= 0xee) || (s1 >= 0xfa)) {
+    } else if ((s1 == 0x81) || (s1 == 0x87) || (s1 >= 0xed && s1 <= 0xee) || (s1 >= 0xfa)) {
       if (n < 2)
         return RET_TOOFEW(0);
       return cp932ext_mbtowc(conv,pwc,s,2);
@@ -131,6 +128,10 @@ cp932_wctomb (conv_t conv, unsigned char *r, ucs4_t wc, size_t n)
 {
   unsigned char buf[2];
   int ret;
+
+  switch (wc) {
+    case 0x2014: wc = 0x2015; break;
+  }
 
   /* Try ASCII. */
   ret = ascii_wctomb(conv,buf,wc,1);
@@ -195,43 +196,6 @@ cp932_wctomb (conv_t conv, unsigned char *r, ucs4_t wc, size_t n)
     c2 = (unsigned int) (wc - 0xe000) % 188;
     r[0] = c1+0xf0;
     r[1] = (c2 < 0x3f ? c2+0x40 : c2+0x41);
-    return 2;
-  }
-
-  /* Irreversible mappings.  */
-  if (wc == 0xff5e) {
-    if (n < 2)
-      return RET_TOOSMALL;
-    r[0] = 0x81;
-    r[1] = 0x60;
-    return 2;
-  }
-  if (wc == 0x2225) {
-    if (n < 2)
-      return RET_TOOSMALL;
-    r[0] = 0x81;
-    r[1] = 0x61;
-    return 2;
-  }
-  if (wc == 0xff0d) {
-    if (n < 2)
-      return RET_TOOSMALL;
-    r[0] = 0x81;
-    r[1] = 0x7c;
-    return 2;
-  }
-  if (wc == 0xffe0) {
-    if (n < 2)
-      return RET_TOOSMALL;
-    r[0] = 0x81;
-    r[1] = 0x91;
-    return 2;
-  }
-  if (wc == 0xffe1) {
-    if (n < 2)
-      return RET_TOOSMALL;
-    r[0] = 0x81;
-    r[1] = 0x92;
     return 2;
   }
 

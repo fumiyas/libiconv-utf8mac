@@ -1404,6 +1404,95 @@ static void do_sjis (const char* name)
   invert(&enc); output_uni2charset_sparse(name,&enc,false);
 }
 
+/* cp932 specifics */
+
+/*
+ * Computes the uni2charset[0x0000..0x2ffff] array.
+ */
+static void invert_cp932 (Encoding* enc)
+{
+  int row, col, j;
+
+  enc->uni2charset = (int*) malloc(0x30000*sizeof(int));
+
+  for (j = 0; j < 0x30000; j++)
+    enc->uni2charset[j] = 0;
+
+  for (row = 0; row < enc->rows; row++)
+    for (col = 0; col < enc->cols; col++) {
+      j = enc->charset2uni[row][col];
+      if (j != 0xfffd)
+        if (enc->uni2charset[j] == 0
+          && (row < enc->byte_row(0xed) || row > enc->byte_row(0xee)))
+          /* see Microsoft Knowledge Base Article - Q170559
+           * http://support.microsoft.com/default.aspx?scid=kb;en-us;Q170559 */
+          enc->uni2charset[j] = 0x100 * enc->row_byte(row) + enc->col_byte(col);
+    }
+}
+
+static void do_cp932 (const char* name)
+{
+  Encoding enc;
+
+  enc.rows = 94;
+  enc.cols = 188;
+  enc.row_byte = row_byte_sjis;
+  enc.col_byte = col_byte_sjis;
+  enc.byte_row = byte_row_sjis;
+  enc.byte_col = byte_col_sjis;
+  enc.check_row_expr = "(%1$s >= 0x81 && %1$s < 0xa0) || (%1$s >= 0xe0)";
+  enc.check_col_expr = "(%1$s >= 0x40 && %1$s < 0x7f) || (%1$s >= 0x80 && %1$s < 0xfd)";
+  enc.byte_row_expr = "%1$s - (%1$s >= 0xe0 ? 0xc1 : 0x81)";
+  enc.byte_col_expr = "%1$s - (%1$s >= 0x80 ? 0x41 : 0x40)";
+
+  read_table(&enc);
+  output_charset2uni(name,&enc);
+  invert_cp932(&enc); output_uni2charset_sparse(name,&enc,false);
+}
+
+/* EUC specifics */
+
+static int row_byte_euc (int row) {
+  return 0xa1 + row;
+}
+static int col_byte_euc (int col) {
+  return 0xa1 + col;
+}
+static int byte_row_euc (int byte) {
+  if (byte >= 0xa1 && byte < 0xff)
+    return byte-0xa1;
+  else if (byte >= 0x8fa1 && byte < 0x8fff)
+    return byte-0x8fa1;
+  else
+    return -1;
+}
+static int byte_col_euc (int byte) {
+  if (byte >= 0xa1 && byte < 0xff)
+    return byte-0xa1;
+  else
+    return -1;
+}
+
+static void do_euc (const char* name)
+{
+  Encoding enc;
+
+  enc.rows = 94;
+  enc.cols = 94;
+  enc.row_byte = row_byte_euc;
+  enc.col_byte = col_byte_euc;
+  enc.byte_row = byte_row_euc;
+  enc.byte_col = byte_col_euc;
+  enc.check_row_expr = "%1$s >= 0xa1 && %1$s < 0xff";
+  enc.check_col_expr = "%1$s >= 0xa1 && %1$s < 0xff";
+  enc.byte_row_expr = "%1$s - 0xa1";
+  enc.byte_col_expr = "%1$s - 0xa1";
+
+  read_table(&enc);
+  output_charset2uni(name,&enc);
+  invert(&enc); output_uni2charset_sparse(name,&enc,false);
+}
+
 /* GB18030 Unicode specifics */
 
 static void do_gb18030uni (const char* name)
@@ -2134,11 +2223,13 @@ int main (int argc, char *argv[])
   else if (!strcmp(name,"johab_hangul"))
     do_johab_hangul(name);
   else if (!strcmp(name,"cp932ext"))
-    do_sjis(name);
+    do_cp932(name);
   else if (!strcmp(name,"gb18030uni"))
     do_gb18030uni(name);
   else if (!strcmp(name,"jisx0213"))
     do_jisx0213(name);
+  else if (!strcmp(name,"eucjp_msext"))
+    do_euc(name);
   else
     exit(1);
 

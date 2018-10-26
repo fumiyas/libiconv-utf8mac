@@ -17,6 +17,7 @@ LIBTOOL_LINK = $(LIBTOOL) --mode=link
 LIBTOOL_INSTALL = $(LIBTOOL) --mode=install
 LIBTOOL_UNINSTALL = $(LIBTOOL) --mode=uninstall
 RM = rm -f
+CHARSET_ALIAS =
 @SET_MAKE@
 
 #### End of system configuration section. ####
@@ -118,6 +119,8 @@ check : all table-from table-to ../src/iconv_no_i18n test-shiftseq test-to-wchar
 #	$(srcdir)/check-stateless $(srcdir) KSC_5601 # redundant, see EUC-KR
 #	/* CJK encodings */
 	$(srcdir)/check-stateless $(srcdir) EUC-JP
+	$(srcdir)/check-stateless $(srcdir) EUCJP-MS
+	$(srcdir)/check-stateless $(srcdir) CP51932
 	$(srcdir)/check-stateless $(srcdir) SHIFT_JIS
 	$(srcdir)/check-stateless $(srcdir) CP932
 	$(srcdir)/check-stateful $(srcdir) ISO-2022-JP

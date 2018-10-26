@@ -68,6 +68,9 @@
 #if defined DARWIN7
 # include <xlocale.h>
 #endif
+#ifndef HAVE_WORKING_O_NOFOLLOW
+# define HAVE_WORKING_O_NOFOLLOW 0
+#endif
 
 
 #if HAVE_LANGINFO_CODESET || defined WINDOWS_NATIVE || defined OS2

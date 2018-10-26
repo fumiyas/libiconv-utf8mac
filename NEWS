@@ -191,3 +191,27 @@ New in 0.1:
 * Fixed a bug in the EUC-JP decoder. Extended the ISO-2022-JP-2 converter.
 * Made TIS-620 mapping consistent with glibc-2.1.
 
+New in libiconv-ja-3:
+* Port to libiconv 1.15
+
+New in libiconv-ja-2.patch:
+* Updated for compile-time error on RHEL7/CentOS7.
+
+New in libiconv-ja-1.patch:
+* Changed EUC-JP, SHIFT_JIS, ISO-2022-JP, ISO-2022-JP-1, ISO-2022-JP-2,
+  ISO-2022-JP-3, DEC-KANJI converters, so that JIS X 0208 1-29(0x815C) EM DASH
+  is converted into U+2014 EM DASH instead of U+2015 HORIZONTAL BAR.
+* Changed SHIFT_JIS, SHIFT_JISX0213, ISO-2022-JP, ISO-2022-JP-1, ISO-2022-JP-2,
+  ISO-2022-JP-3 converters, so that JIS X 0201 5/12(0x5C) YEN SIGN is
+  converted into U+005C REVERSE SOLIDUS instead of U+00A5 YEN SIGN and
+  JIS X 0201 7/14(0x7E) OVER LINE is converted into U+007E TILDE instead of
+  U+203E OVER LINE.
+* Changed EUC-JP, SHIFT_JIS converters to exclude UDC mappings.
+* Changed CP932 converter to use exact mapping table.
+* Added WINDOWS-31J, csWINDOWS31J, SJIS-OPEN, SJIS-WIN, Shift_JIS-MS, SJIS-MS,
+  MS932, WINDOWS-932 as aliases for CP932.
+* Added EUCJP-MS converter.
+* Added EUC-JP-MS, EUCJP-OPEN, EUCJP-WIN as aliases for EUCJP-MS.
+* Added CP51932 converter.
+* Added ISO-2022-JP-MS converter.
+* Added WINDOWS-51932 and MS51932 as alias of CP51932.
