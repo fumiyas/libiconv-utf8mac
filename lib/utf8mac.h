@@ -1352,6 +1352,7 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
 				if (ucs_ch < SP_LOW_FIRST || ucs_ch > SP_LOW_LAST)
 					goto invalid;
                                *ucsp++ = swapbytes ? OSSwapInt16(ucs_ch) : ucs_ch;
+				utf8lastpass = utf8p;
 			        continue;
 			default:
 				goto invalid;
@@ -1605,7 +1606,7 @@ utf8mac_mbtowc (conv_t conv, ucs4_t *pwc, const unsigned char *s, size_t n)
     if ( ret == EINVAL)		/* Illegal UTF-8 sequence found */
 	return RET_ILSEQ;
 
-    if((ret = ucs2_mbtowc(conv, pwc, (const unsigned char *) ucsp, ucslen)) < 0)
+    if((ret = utf16_mbtowc(conv, pwc, (const unsigned char *) ucsp, ucslen)) < 0)
 	return ret;
 
     return (int)consumed;
