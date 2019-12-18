@@ -1,0 +1,41 @@
+GNULIB_SRCDIR=
+AUTOCONF=		autoconf
+AUTOHEADER=		autoheader
+AUTOMAKE=		automake
+ACLOCAL=		aclocal
+GIT=			git
+
+GIT_DATE=		`TZ=UTC $(GIT) show --quiet --date='format-local:%Y%m%d%H%M%S' --format="%cd"`
+GIT_HASH=		`$(GIT) rev-parse @ |cut -c 1-7`
+UTF8MAC_VERSION=	0.$(GIT_DATE).git$(GIT_HASH)
+APPLE_VERSION=		51
+DIST_VERSION=		`sed -n 's/^VERSION *= *//p' Makefile`
+
+VERSION=		$(DIST_VERSION).utf8mac$(APPLE_VERSION).$(UTF8MAC_VERSION)
+
+default: usage
+
+.PHONY: usage
+usage:
+	@ echo "$(MAKE) [dist|autogen]"
+
+.PHONY: dist
+dist: Makefile
+	$(MAKE) -f Makefile VERSION="$(VERSION)" dist
+
+.PHONY: autogen
+autogen: configure
+
+configure: configure.ac autogen.sh
+	./gitsub.sh pull --depth=1
+	env \
+	  GNULIB_SRCDIR="$(GNULIB_SRCDIR)" \
+	  AUTOCONF="$(AUTOCONF)" \
+	  AUTOHEADER="$(AUTOHEADER)" \
+	  AUTOMAKE="$(AUTOMAKE)" \
+	  ACLOCAL="$(ACLOCAL)" \
+	  ./autogen.sh \
+	;
+
+Makefile: Makefile.in configure
+	./configure
