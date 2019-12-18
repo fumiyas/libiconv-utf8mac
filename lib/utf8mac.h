@@ -1687,7 +1687,11 @@ utf8mac_wctomb (conv_t conv, unsigned char *r, ucs4_t wc, size_t n) /* n == 0 is
 #ifdef __LITTLE_ENDIAN__
     flags |= UTF_REVERSE_ENDIAN;
 #endif
-    utf8_encodestr(ucs_string, ret, r, &len, n, 0, flags);
+    ret = utf8_encodestr(ucs_string, ret, r, &len, n, 0, flags);
+    if (ret == EINVAL)
+        return RET_ILUNI;
+    if (ret == ENAMETOOLONG)
+        return RET_TOOSMALL;
 
     return (int)len;
 }
