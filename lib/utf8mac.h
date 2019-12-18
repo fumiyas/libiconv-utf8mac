@@ -66,6 +66,63 @@ int	utf8_encodestr (const u_int16_t *, size_t, u_int8_t *, size_t *,
 int	utf8_decodestr (const u_int8_t *, size_t, u_int16_t *,size_t *,
 		size_t, u_int16_t, int, size_t *);
 
+/* Port from utf16be.h and remove the `conv_t conv` argument */
+static int
+_utf16be_mbtowc (ucs4_t *pwc, const unsigned char *s, size_t n)
+{
+  int count = 0;
+  if (n >= 2) {
+    ucs4_t wc = (s[0] << 8) + s[1];
+    if (wc >= 0xd800 && wc < 0xdc00) {
+      if (n >= 4) {
+        ucs4_t wc2 = (s[2] << 8) + s[3];
+        if (!(wc2 >= 0xdc00 && wc2 < 0xe000))
+          goto ilseq;
+        *pwc = 0x10000 + ((wc - 0xd800) << 10) + (wc2 - 0xdc00);
+        return count+4;
+      }
+    } else if (wc >= 0xdc00 && wc < 0xe000) {
+      goto ilseq;
+    } else {
+      *pwc = wc;
+      return count+2;
+    }
+  }
+  return RET_TOOFEW(count);
+
+ilseq:
+  return RET_SHIFT_ILSEQ(count);
+}
+
+/* Port from utf16be.h and remove the `conv_t conv` argument */
+static int
+_utf16be_wctomb (unsigned char *r, ucs4_t wc, size_t n)
+{
+  if (!(wc >= 0xd800 && wc < 0xe000)) {
+    if (wc < 0x10000) {
+      if (n >= 2) {
+        r[0] = (unsigned char) (wc >> 8);
+        r[1] = (unsigned char) wc;
+        return 2;
+      } else
+        return RET_TOOSMALL;
+    }
+    else if (wc < 0x110000) {
+      if (n >= 4) {
+        ucs4_t wc1 = 0xd800 + ((wc - 0x10000) >> 10);
+        ucs4_t wc2 = 0xdc00 + ((wc - 0x10000) & 0x3ff);
+        r[0] = (unsigned char) (wc1 >> 8);
+        r[1] = (unsigned char) wc1;
+        r[2] = (unsigned char) (wc2 >> 8);
+        r[3] = (unsigned char) wc2;
+        return 4;
+      } else
+        return RET_TOOSMALL;
+    }
+  }
+  return RET_ILUNI;
+}
+
 /*
 	Derived from Core Foundation headers:
 
@@ -1263,7 +1320,7 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
 {
 	u_int16_t* bufstart;
 	u_int16_t* bufend;
-	unsigned int ucs_ch;
+	unsigned int ucs_ch, ucs_ch2;
 	unsigned int byte;
 	int result = 0;
 	int decompose, precompose, swapbytes;
@@ -1286,6 +1343,7 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
 		/* check for ascii */
 		if (byte < 0x80) {
 			ucs_ch = byte;                 /* 1st byte */
+			ucs_ch2 = 0;
 		} else {
 			u_int32_t ch;
 			int extrabytes = utf_extrabytes[byte >> 3];
@@ -1305,6 +1363,7 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
 				if (ch < 0x0080)
 					goto invalid;
 				ucs_ch = ch;
+				ucs_ch2 = 0;
 				break;
 			case 2:
 				ch = byte; ch <<= 6;   /* 1st byte */
@@ -1326,6 +1385,7 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
 						goto invalid;
 				}
 				ucs_ch = ch;
+				ucs_ch2 = 0;
 				break;
 			case 3:
 				ch = byte; ch <<= 6;   /* 1st byte */
@@ -1345,14 +1405,10 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
 				ucs_ch = (ch >> SP_HALF_SHIFT) + SP_HIGH_FIRST;
 				if (ucs_ch < SP_HIGH_FIRST || ucs_ch > SP_HIGH_LAST)
 					goto invalid;
-				*ucsp++ = swapbytes ? OSSwapInt16(ucs_ch) : ucs_ch;
-				if (ucsp >= bufend)
-					goto toolong;
-				ucs_ch = (ch & SP_HALF_MASK) + SP_LOW_FIRST;
-				if (ucs_ch < SP_LOW_FIRST || ucs_ch > SP_LOW_LAST)
+				ucs_ch2 = (ch & SP_HALF_MASK) + SP_LOW_FIRST;
+				if (ucs_ch2 < SP_LOW_FIRST || ucs_ch2 > SP_LOW_LAST)
 					goto invalid;
-				*ucsp++ = swapbytes ? OSSwapInt16(ucs_ch) : ucs_ch;
-				continue;
+				break;
 			default:
 				goto invalid;
 			}
@@ -1360,7 +1416,7 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
 		if (precompose && (ucsp != bufstart)) {
 			u_int16_t composite, base;
 
-			if (unicode_combinable(ucs_ch)) {
+			if (!ucs_ch2 && unicode_combinable(ucs_ch)) {
 				base = swapbytes ? OSSwapInt16(*(ucsp - 1)) : *(ucsp - 1);
 				composite = unicode_combine(base, ucs_ch);
 				if (composite) {
@@ -1374,6 +1430,11 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
 			}
 		}
 		*ucsp++ = swapbytes ? OSSwapInt16(ucs_ch) : ucs_ch;
+		if (ucs_ch2) {
+			if (ucsp >= bufend)
+				goto toolong;
+			*ucsp++ = swapbytes ? OSSwapInt16(ucs_ch2) : ucs_ch2;
+		}
 		utf8lastpass = utf8p;
 	}
 
@@ -1605,7 +1666,7 @@ utf8mac_mbtowc (conv_t conv, ucs4_t *pwc, const unsigned char *s, size_t n)
     if ( ret == EINVAL)		/* Illegal UTF-8 sequence found */
 	return RET_ILSEQ;
 
-    if((ret = ucs2_mbtowc(conv, pwc, (const unsigned char *) ucsp, ucslen)) < 0)
+    if((ret = _utf16be_mbtowc(pwc, (const unsigned char *) ucsp, ucslen)) < 0)
         return ret;
 
     return (int)consumed;
@@ -1619,7 +1680,7 @@ utf8mac_wctomb (conv_t conv, unsigned char *r, ucs4_t wc, size_t n) /* n == 0 is
     u_int16_t ucs_string[13];
     int flags;
 
-    if((ret = ucs2_wctomb(conv, (unsigned char *) ucs_string, wc, sizeof(ucs_string))) < 0)
+    if((ret = _utf16be_wctomb((unsigned char *) ucs_string, wc, sizeof(ucs_string))) < 0)
         return ret;
 
     flags = UTF_NO_NULL_TERM | UTF_DECOMPOSED;
