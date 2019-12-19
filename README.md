@@ -12,9 +12,10 @@ Works
 
 * Base source: GNU libiconv 1.16 
 * UTF-8-MAC support: Apple libiconv-51.200.6 (utf8mac.h)
-* My works:
-    * Port UTF-8-MAC support to Linux, Solaris, AIX 
+* My UTF-8-MAC works:
+    * Port to Linux, Solaris, AIX 
     * Support surrogate pairs
+    * Fix a bug
 
 Building libiconv program and libraries from the Git repository
 ======================================================================
@@ -27,6 +28,8 @@ $ sudo apt install gcc make autoconf automake gperf gettext groff gnulib git
 $ git clone https://github.com/fumiyas/libiconv-utf8mac.git
 ...
 $ cd libiconv-utf8mac
+$ git rev-parse --abbrev-ref @ # Note: Check if the current tree is `utf-8-mac-*`
+utf-8-mac-51.200.6.libiconv-1.16
 $ make -f Makefile.utf8mac autogen
 ...
 $ ./configure
