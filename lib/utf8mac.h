@@ -1349,7 +1349,7 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
 			int extrabytes = utf_extrabytes[byte >> 3];
 
 			if (utf8len < extrabytes)
-				goto invalid;
+				goto toolong;
 			utf8len -= extrabytes;
 
 			switch (extrabytes) {
