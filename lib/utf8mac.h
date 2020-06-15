@@ -27,22 +27,22 @@
  	Includes Unicode 3.2 decomposition code derived from Core Foundation
  */
 
+#include <stdint.h>
+typedef uint8_t u_int8_t;
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
+typedef uint64_t u_int64_t;
+
 #if defined(__APPLE__)
 #include <libkern/OSByteOrder.h>
 #elif defined(__sun)
-# include <sys/types.h>
 # include <sys/byteorder.h>
 # ifdef BSWAP_16
 #  define OSSwapInt16(x) BSWAP_16(x)
 # else
 #  define OSSwapInt16(x) ((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
 # endif
-  typedef uint8_t u_int8_t;
-  typedef uint16_t u_int16_t;
-  typedef uint32_t u_int32_t;
-  typedef uint64_t u_int64_t;
 #elif defined(_AIX)
-# include <inttypes.h>
 # define OSSwapInt16(x) ((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
 #else
 # include <byteswap.h>
