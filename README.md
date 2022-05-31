@@ -1,7 +1,7 @@
 GNU libiconv with UTF-8-MAC support (Port from Apple's GNU libiconv)
 ======================================================================
 
-  * Copyright (c) 2018-2019 SATOH Fumiyasu @ OSS Technology Corp., Japan
+  * Copyright (c) 2018-2022 SATOH Fumiyasu @ OSS Technology Corp., Japan
   * License: GNU General Public License Version 3 (iconv program and docs),
              GNU Library General Public License Version 2 (libraries)
   * Development home: <https://github.com/fumiyas/libiconv-utf8mac>
@@ -10,12 +10,12 @@ GNU libiconv with UTF-8-MAC support (Port from Apple's GNU libiconv)
 Works
 ======================================================================
 
-* Base source: GNU libiconv 1.16 
+* Base source: GNU libiconv 1.17
 * UTF-8-MAC support: Apple libiconv-51.200.6 (utf8mac.h)
 * My UTF-8-MAC works:
-    * Port to Linux, Solaris, AIX 
+    * Port to Linux, Solaris, AIX
     * Support surrogate pairs
-    * Fix a bug
+    * Fix bugs
 
 Building libiconv program and libraries from the Git repository
 ======================================================================
@@ -29,7 +29,7 @@ $ git clone https://github.com/fumiyas/libiconv-utf8mac.git
 ...
 $ cd libiconv-utf8mac
 $ git rev-parse --abbrev-ref @ # Note: Check if the current tree is `utf-8-mac-*`
-utf-8-mac-51.200.6.libiconv-1.16
+utf-8-mac-51.200.6.libiconv-1.17
 $ make -f Makefile.utf8mac autogen
 ...
 $ ./configure
